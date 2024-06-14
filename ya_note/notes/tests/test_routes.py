@@ -6,7 +6,6 @@ from django.urls import reverse
 
 from notes.models import Note
 
-
 User = get_user_model()
 
 
@@ -30,8 +29,7 @@ class TestRoutes(TestCase):
         )
 
     def test_pages_availability(self):
-        '''Доступ для неаунтефицированного пользователя.'''
-
+        """Доступ для неаунтефицированного пользователя."""
         urls = (
             ('notes:home'),
             ('users:login'),
@@ -44,8 +42,7 @@ class TestRoutes(TestCase):
                 self.assertEqual(response.status_code, HTTPStatus.OK)
 
     def test_pages_availability_for_auth_user(self):
-        '''Доступ для аунтефицированных пользователей.'''
-
+        """Доступ для аунтефицированных пользователей."""
         urls = (
             ('notes:list'),
             ('notes:add'),
@@ -62,7 +59,7 @@ class TestRoutes(TestCase):
             (self.author_logged, HTTPStatus.OK),
             (self.reader_logged, HTTPStatus.NOT_FOUND),
         )
-        
+
         for client, status in users_statuses:
 
             for url in (
@@ -70,9 +67,9 @@ class TestRoutes(TestCase):
                 'notes:delete',
                 'notes:detail',
             ):
-                with self.subTest():        
+                with self.subTest():
                     response = client.get(reverse(url, args=(self.note.slug,)))
-                    self.assertEqual(response.status_code, status) 
+                    self.assertEqual(response.status_code, status)
 
     def test_redirect_for_anonymous_client(self):
         login_url = reverse('users:login')
@@ -90,4 +87,3 @@ class TestRoutes(TestCase):
                 redirect_url = f'{login_url}?next={url}'
                 response = self.client.get(url)
                 self.assertRedirects(response, redirect_url)
-
