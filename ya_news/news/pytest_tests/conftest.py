@@ -1,7 +1,9 @@
 from datetime import datetime, timedelta
 
 import pytest
+from django.conf import settings
 from django.test.client import Client
+from django.urls import reverse
 from django.utils import timezone
 
 from news.models import Comment, News
@@ -46,12 +48,6 @@ def news():
 
 
 @pytest.fixture
-def id_for_args(news):
-    """Возвращает id для args."""
-    return news.id,
-
-
-@pytest.fixture
 def comment(news, author):
     """Фикстура для создания объекта коментария."""
     comment = Comment.objects.create(
@@ -60,12 +56,6 @@ def comment(news, author):
         text='Текст коментария',
     )
     return comment
-
-
-@pytest.fixture
-def comment_id_for_args(comment):
-    """Возвращает id для args."""
-    return comment.id,
 
 
 @pytest.fixture
@@ -79,7 +69,7 @@ def news_list():
             text='Текст',
             date=today - timedelta(days=index),
         )
-        for index in range(10)
+        for index in range(settings.NEWS_COUNT_ON_HOME_PAGE + 1)
     )
 
 
@@ -99,11 +89,41 @@ def ten_comments(news, author):
         comment.save()
 
         all_comments.append(comment)
-    return all_comments
+
+
+"""URLS"""
 
 
 @pytest.fixture
-def form_data():
-    return {
-        'text': 'Техт'
-    }
+def url_news_home():
+    return reverse('news:home')
+
+
+@pytest.fixture
+def url_news_detail(news):
+    return reverse('news:detail', args=(news.id,))
+
+
+@pytest.fixture
+def url_comment_edit(comment):
+    return reverse('news:delete', args=(comment.id,))
+
+
+@pytest.fixture
+def url_comment_delete(comment):
+    return reverse('news:edit', args=(comment.id,))
+
+
+@pytest.fixture
+def url_user_login():
+    return reverse('users:login')
+
+
+@pytest.fixture
+def url_user_logout():
+    return reverse('users:logout')
+
+
+@pytest.fixture
+def url_user_signup():
+    return reverse('users:signup')

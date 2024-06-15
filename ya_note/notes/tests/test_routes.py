@@ -28,29 +28,42 @@ class TestRoutes(TestCase):
             author=cls.author
         )
 
+        cls.URL_USERS_LOGIN = reverse('users:login')
+        cls.URL_USERS_LOGOUT = reverse('users:logout')
+        cls.URL_USERS_SIGNUP = reverse('users:signup')
+
+        cls.URL_NOTES_HOME = reverse('notes:home')
+        cls.URL_NOTES_LIST = reverse('notes:list')
+        cls.URL_NOTES_ADD = reverse('notes:add')
+        cls.URL_NOTES_SUCCESS = reverse('notes:success')
+
+        cls.URL_NOTES_DETAIL = reverse('notes:detail', args=(cls.note.slug,))
+        cls.URL_NOTES_EDIT = reverse('notes:edit', args=(cls.note.slug,))
+        cls.URL_NOTES_DELETE = reverse('notes:delete', args=(cls.note.slug,))
+
     def test_pages_availability(self):
         """Доступ для неаунтефицированного пользователя."""
         urls = (
-            ('notes:home'),
-            ('users:login'),
-            ('users:logout'),
-            ('users:signup'),
+            self.URL_NOTES_HOME,
+            self.URL_USERS_LOGIN,
+            self.URL_USERS_LOGOUT,
+            self.URL_USERS_SIGNUP,
         )
-        for name in urls:
-            with self.subTest(name=name):
-                response = self.client.get(reverse(name))
+        for url in urls:
+            with self.subTest(name=url):
+                response = self.client.get(url)
                 self.assertEqual(response.status_code, HTTPStatus.OK)
 
     def test_pages_availability_for_auth_user(self):
         """Доступ для аунтефицированных пользователей."""
         urls = (
-            ('notes:list'),
-            ('notes:add'),
-            ('notes:success'),
+            self.URL_NOTES_LIST,
+            self.URL_NOTES_ADD,
+            self.URL_NOTES_SUCCESS,
         )
-        for name in urls:
-            with self.subTest(name=name):
-                response = self.reader_logged.get(reverse(name))
+        for url in urls:
+            with self.subTest(name=url):
+                response = self.reader_logged.get(url)
                 self.assertEqual(response.status_code, HTTPStatus.OK)
 
     def test_pages_availability_for_different_users(self):
@@ -63,27 +76,25 @@ class TestRoutes(TestCase):
         for client, status in users_statuses:
 
             for url in (
-                'notes:edit',
-                'notes:delete',
-                'notes:detail',
+                self.URL_NOTES_EDIT,
+                self.URL_NOTES_DELETE,
+                self.URL_NOTES_DETAIL,
             ):
-                with self.subTest():
-                    response = client.get(reverse(url, args=(self.note.slug,)))
+                with self.subTest(name=url):
+                    response = client.get(url)
                     self.assertEqual(response.status_code, status)
 
     def test_redirect_for_anonymous_client(self):
-        login_url = reverse('users:login')
         urls = (
-            ('notes:edit', (self.note.slug,)),
-            ('notes:delete', (self.note.slug,)),
-            ('notes:detail', (self.note.slug,)),
-            ('notes:list', None),
-            ('notes:success', None),
-            ('notes:add', None),
+            self.URL_NOTES_EDIT,
+            self.URL_NOTES_DELETE,
+            self.URL_NOTES_DETAIL,
+            self.URL_NOTES_LIST,
+            self.URL_NOTES_ADD,
+            self.URL_NOTES_SUCCESS,
         )
-        for name, args in urls:
-            with self.subTest(name=name):
-                url = reverse(name, args=args)
-                redirect_url = f'{login_url}?next={url}'
+        for url in urls:
+            with self.subTest(name=url):
+                redirect_url = f'{self.URL_USERS_LOGIN}?next={url}'
                 response = self.client.get(url)
                 self.assertRedirects(response, redirect_url)
