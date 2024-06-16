@@ -2,7 +2,6 @@ from http import HTTPStatus
 from random import choice
 
 import pytest
-from django.urls import reverse
 from pytest_django.asserts import assertFormError, assertRedirects
 
 from news.forms import BAD_WORDS, WARNING
@@ -19,6 +18,7 @@ def test_anonymous_user_cant_create_note(
     url_user_login
 ):
     """Анонимный пользователь не может отправить комментарий."""
+    Comment.objects.all().delete()
     comments_befort_test = Comment.objects.count()
     response = client.post(url_news_detail, data=TEST_TEXT)
     assertRedirects(response, f'{url_user_login}?next={url_news_detail}')
@@ -63,9 +63,7 @@ def test_author_can_delete_comment(
 ):
     """Авторизованный пользователь может удалять свои комментарии."""
     comments_befort_test = Comment.objects.count()
-    response = author_client.delete(
-        reverse('news:delete', args=(comment.id,))
-    )
+    response = author_client.delete(url_comment_delete)
     assertRedirects(response, f'{url_news_detail}#comments')
     assert Comment.objects.count() == comments_befort_test - 1
 
@@ -75,11 +73,12 @@ def test_author_can_edit_comment(
     news,
     comment,
     url_news_detail,
+    url_comment_edit
 ):
     """Авторизованный пользователь может редактировать свои комментарии."""
     comments_befort_test = Comment.objects.count()
     response = author_client.post(
-        reverse('news:edit', args=(comment.id,)),
+        url_comment_edit,
         data=TEST_TEXT
     )
     assertRedirects(response, f'{url_news_detail}#comments')
@@ -87,13 +86,15 @@ def test_author_can_edit_comment(
 
     comment_db = Comment.objects.get(id=comment.id)
     assert comment_db.text == TEST_TEXT['text']
+    assert comment_db.news == comment.news
+    assert comment_db.author == comment.author
 
 
-def test_user_cant_delete_comment(author_client, comment, url_comment_delete):
+def test_user_cant_delete_comment(reader_client, comment, url_comment_delete):
     """Авторизованный пользователь не может удалять чужие комментарии."""
     comments_befort_test = Comment.objects.count()
-    response = author_client.delete(url_comment_delete)
-    assert response.status_code == HTTPStatus.METHOD_NOT_ALLOWED
+    response = reader_client.delete(url_comment_delete)
+    assert response.status_code == HTTPStatus.NOT_FOUND
     assert Comment.objects.count() == comments_befort_test
 
 
@@ -103,5 +104,7 @@ def test_user_cant_edit_comment(reader_client, comment, url_comment_edit):
         url_comment_edit,
         data=TEST_TEXT)
     comment_db = Comment.objects.get(id=comment.id)
-    assert comment_db.text != TEST_TEXT['text']
     assert response.status_code == HTTPStatus.NOT_FOUND
+    assert comment_db.text == comment.text
+    assert comment_db.news == comment.news
+    assert comment_db.author == comment.author

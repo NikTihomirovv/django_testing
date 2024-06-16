@@ -76,8 +76,6 @@ def news_list():
 @pytest.fixture
 def ten_comments(news, author):
     """Создает 10 коментов к новости."""
-    all_comments = []
-
     for index in range(10):
         comment = Comment.objects.create(
             news=news,
@@ -87,8 +85,6 @@ def ten_comments(news, author):
 
         comment.created = timezone.now() + timedelta(days=index)
         comment.save()
-
-        all_comments.append(comment)
 
 
 """URLS"""
@@ -106,12 +102,12 @@ def url_news_detail(news):
 
 @pytest.fixture
 def url_comment_edit(comment):
-    return reverse('news:delete', args=(comment.id,))
+    return reverse('news:edit', args=(comment.id,))
 
 
 @pytest.fixture
 def url_comment_delete(comment):
-    return reverse('news:edit', args=(comment.id,))
+    return reverse('news:delete', args=(comment.id,))
 
 
 @pytest.fixture

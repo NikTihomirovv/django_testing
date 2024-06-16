@@ -38,25 +38,6 @@ def test_users_pages_availability_for_anonymous_user(client, reverse_url):
 
 
 @pytest.mark.parametrize(
-    'reverse_url',
-    (
-        pytest.lazy_fixture('url_comment_edit'),
-        pytest.lazy_fixture('url_comment_delete'),
-    )
-)
-def test_pages_availability_for_author(
-    author_client,
-    comment,
-    reverse_url
-):
-    """
-    Страницы удаления и редактирования
-    комментария доступны автору комментария.
-    """
-    assert author_client.get(reverse_url).status_code == HTTPStatus.OK
-
-
-@pytest.mark.parametrize(
     'reverse_url, parametrized_client, expected_status',
     (
         (
@@ -75,14 +56,19 @@ def test_pages_availability_for_different_users(
     reverse_url,
     parametrized_client,
     expected_status,
-    comment
+    comment,
+    author_client
 ):
     """
     Авторизованный пользователь не может зайти на
     страницы редактирования или удаления чужих
     комментариев (возвращается ошибка 404).
+
+    Страницы удаления и редактирования
+    комментария доступны автору комментария.
     """
     assert parametrized_client.get(reverse_url).status_code == expected_status
+    assert author_client.get(reverse_url).status_code == HTTPStatus.OK
 
 
 @pytest.mark.parametrize(
