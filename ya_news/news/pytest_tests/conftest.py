@@ -87,7 +87,7 @@ def ten_comments(news, author):
         comment.save()
 
 
-"""URLS"""
+# Fixtures for reverse
 
 
 @pytest.fixture

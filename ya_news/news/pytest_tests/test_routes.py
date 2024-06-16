@@ -21,23 +21,6 @@ def test_news_pages_availability_for_anonymous_user(
 
 
 @pytest.mark.parametrize(
-    'reverse_url',
-    (
-        pytest.lazy_fixture('url_user_login'),
-        pytest.lazy_fixture('url_user_logout'),
-        pytest.lazy_fixture('url_user_signup'),
-    )
-)
-def test_users_pages_availability_for_anonymous_user(client, reverse_url):
-    """
-    Страницы регистрации пользователей,
-       входа в учётную запись и выхода из
-       неё доступны анонимным пользователям.
-    """
-    assert client.get(reverse_url).status_code == HTTPStatus.OK
-
-
-@pytest.mark.parametrize(
     'reverse_url, parametrized_client, expected_status',
     (
         (
@@ -47,9 +30,34 @@ def test_users_pages_availability_for_anonymous_user(client, reverse_url):
         ),
         (
             pytest.lazy_fixture('url_comment_delete'),
+            pytest.lazy_fixture('reader_client'),
+            HTTPStatus.NOT_FOUND
+        ),
+        (
+            pytest.lazy_fixture('url_comment_edit'),
             pytest.lazy_fixture('author_client'),
             HTTPStatus.OK
-        )
+        ),
+        (
+            pytest.lazy_fixture('url_comment_delete'),
+            pytest.lazy_fixture('author_client'),
+            HTTPStatus.OK
+        ),
+        (
+            pytest.lazy_fixture('url_user_login'),
+            pytest.lazy_fixture('client'),
+            HTTPStatus.OK
+        ),
+        (
+            pytest.lazy_fixture('url_user_logout'),
+            pytest.lazy_fixture('client'),
+            HTTPStatus.OK
+        ),
+        (
+            pytest.lazy_fixture('url_user_signup'),
+            pytest.lazy_fixture('client'),
+            HTTPStatus.OK
+        ),
     ),
 )
 def test_pages_availability_for_different_users(
@@ -66,9 +74,12 @@ def test_pages_availability_for_different_users(
 
     Страницы удаления и редактирования
     комментария доступны автору комментария.
+
+    Страницы регистрации пользователей,
+    входа в учётную запись и выхода из
+    неё доступны анонимным пользователям.
     """
     assert parametrized_client.get(reverse_url).status_code == expected_status
-    assert author_client.get(reverse_url).status_code == HTTPStatus.OK
 
 
 @pytest.mark.parametrize(

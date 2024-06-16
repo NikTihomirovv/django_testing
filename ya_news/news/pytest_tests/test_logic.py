@@ -27,6 +27,7 @@ def test_anonymous_user_cant_create_note(
 
 def test_user_can_create_comment(author_client, author, news, url_news_detail):
     """Авторизованный пользователь может отправить комментарий."""
+    Comment.objects.all().delete()
     comments_befort_test = Comment.objects.count()
     response = author_client.post(url_news_detail, data=TEST_TEXT)
     assertRedirects(response, f'{url_news_detail}#comments')

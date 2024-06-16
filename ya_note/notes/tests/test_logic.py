@@ -5,7 +5,6 @@ from django.utils.text import slugify
 
 from notes.forms import WARNING
 from notes.models import Note
-
 from .fixtures import Fixtures
 
 User = get_user_model()
@@ -21,9 +20,10 @@ class TestNoteCreation(Fixtures):
             self.URL_NOTES_SUCCESS
         )
         self.assertEqual(Note.objects.count(), NOTES_BEFORE_REQUEST + 1)
-        note = Note.objects.get(slug=self.form_data['slug'])
-        self.assertEqual(note.title, self.form_data['title'])
-        self.assertEqual(note.text, self.form_data['text'])
+        new_note = Note.objects.get(slug=self.form_data['slug'])
+        self.assertEqual(new_note.title, self.form_data['title'])
+        self.assertEqual(new_note.text, self.form_data['text'])
+        self.assertEqual(new_note.author, self.author)
 
     def test_note_creation_by_annonymous_user(self):
         """Анонимный пользователь не может создать заметку."""
@@ -53,6 +53,7 @@ class TestNoteCreation(Fixtures):
         то он формируется автоматически,
         с помощью функции pytils.translit.slugify.
         """
+        Note.objects.all().delete()
         NOTES_BEFORE_REQUEST = Note.objects.count()
         self.form_data['slug'] = ''
         response = self.author_logged.post(
@@ -63,7 +64,7 @@ class TestNoteCreation(Fixtures):
         self.assertRedirects(response, self.URL_NOTES_SUCCESS)
         self.assertEqual(Note.objects.count(), NOTES_BEFORE_REQUEST + 1)
         self.assertEqual(
-            Note.objects.get(id=NOTES_BEFORE_REQUEST + 1).slug,
+            Note.objects.get().slug,
             slugify(self.form_data['title'])
         )
 
@@ -78,6 +79,7 @@ class TestNoteCreation(Fixtures):
         self.assertEqual(self.note.text, self.form_data['text'])
         self.assertEqual(self.note.title, self.form_data['title'])
         self.assertEqual(self.note.slug, self.form_data['slug'])
+        self.assertEqual(self.note.author, self.author)
 
     def test_user_can_delete_his_notes(self):
         """Пользователь может удалять свои заметки."""
